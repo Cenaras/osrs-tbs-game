@@ -63,8 +63,6 @@ public class TestStandardGame {
         assertThat(game.getHero(Player.ZAMORAK).getOwner(), is(Player.ZAMORAK));
     }
 
-
-
     @Test
     public void shouldHave_MAX_HEALTH_AtStart() {
         Hero saraHero = game.getHero(Player.SARADOMIN);
@@ -92,7 +90,7 @@ public class TestStandardGame {
     }
 
     @Test
-    public void bothPlayersStartWithGoblinInInventory() {
+    public void bothPlayersStartWithGoblinInInventoryAtIndex0() {
         List<Unit> saraInventory = game.getInventory(Player.SARADOMIN);
         List<Unit> zammyInventory = game.getInventory(Player.ZAMORAK);
 
@@ -120,9 +118,42 @@ public class TestStandardGame {
     public void shouldHave3GPForEachHeroAtStart() {
         assertThat(game.getHero(Player.SARADOMIN).getGP(), is(3));
         assertThat(game.getHero(Player.ZAMORAK).getGP(), is(3));
-
     }
 
+
+    @Test
+    public void cannotPlayUnitInBattlePhase() {
+        game.endPlayPhase(Player.ZAMORAK);
+        game.endPlayPhase(Player.SARADOMIN);
+
+        Status status = game.playUnit(Player.SARADOMIN, game.getItemInInventory(Player.SARADOMIN, 0), new Position(1, 1));
+        assertThat(status, is(Status.NOT_PLAY_PHASE));
+    }
+
+    // TODO: NOT_ENOUGH_GP_TEST
+    // TODO: Test covering all possible Status codes
+    // TODO: Test ALREADY_OCCUPIED
+
+
+    @Test
+    public void shouldHaveGoblinOn1x1WhenPlaying() {
+        Unit goblin = game.getItemInInventory(Player.SARADOMIN, 0);
+        Position pos = new Position(1, 1);
+        game.playUnit(Player.SARADOMIN, goblin, pos);
+
+        assertThat(game.getUnitAt(pos).getType(), is(GameConstants.GOBLIN_UNIT));
+        assertThat(game.getUnitAt(pos).getOwner(), is(Player.SARADOMIN));
+    }
+
+
+    @Test
+    public void shouldBothHaveAGoblinWhenPlaying() {
+        game.playUnit(Player.SARADOMIN, game.getItemInInventory(Player.SARADOMIN, 0), new Position(1, 1));
+        game.playUnit(Player.ZAMORAK, game.getItemInInventory(Player.ZAMORAK, 0), new Position(7, 7));
+
+        assertThat(game.getUnits(Player.SARADOMIN).size(), is(1));
+        assertThat(game.getUnits(Player.ZAMORAK).size(), is(1));
+    }
 
 
 }

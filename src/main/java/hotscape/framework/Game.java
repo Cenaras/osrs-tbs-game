@@ -36,13 +36,14 @@ public interface Game {
 
     /**
      * Plays a unit onto the field.
+     * PRECONDITION: unit is retrieved by getItemInInventory
      *
      * @param player the player performing the play action
      * @param unit   the unit to play
      * @return Status of operation
      */
     // TODO: Position on field?
-    Status playUnit(Player player, Unit unit);
+    Status playUnit(Player player, Unit unit, Position position);
 
 
     /**

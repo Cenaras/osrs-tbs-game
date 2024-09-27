@@ -19,8 +19,10 @@ public enum Status {
      */
     NOT_ENOUGH_GP,
 
+    ALREADY_OCCUPIED,
+
     /**
      * Everything OK.
      */
-    OK,
+    OK, NOT_OWNER,
 }

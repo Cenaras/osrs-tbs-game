@@ -2,9 +2,12 @@ package hotscape.standard;
 
 import hotscape.framework.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+//  TODO: Make a "Simple Initial Hand" to make production easier, worry about balance later on...
 
 public class StandardGame implements Game {
 
@@ -12,6 +15,7 @@ public class StandardGame implements Game {
     private final Map<Player, Boolean> endPlayPhaseMap;
     private final Map<Player, List<Unit>> inventoryMap;
 
+    private final Unit[][] board = new Unit[GameConstants.MAX_ROW][GameConstants.MAX_COL];
 
     private GameState gameState;
 
@@ -48,12 +52,23 @@ public class StandardGame implements Game {
 
     @Override
     public List<Unit> getUnits(Player who) {
-        return List.of();
+        ArrayList<Unit> units = new ArrayList<>();
+        for (int row = 0; row < GameConstants.MAX_ROW; row++) {
+            for (int col = 0; col < GameConstants.MAX_COL; col++) {
+                Unit unit = getUnitAt(new Position(row, col));
+                boolean isOwner = unit != null && unit.getOwner() == who;
+
+                if (isOwner) {
+                    units.add(unit);
+                }
+            }
+        }
+        return units;
     }
 
     @Override
     public Unit getUnitAt(Position position) {
-        return null;
+        return board[position.row()][position.col()];
     }
 
     @Override
@@ -67,8 +82,31 @@ public class StandardGame implements Game {
     }
 
     @Override
-    public Status playUnit(Player player, Unit unit) {
-        return null;
+    public Status playUnit(Player player, Unit unit, Position position) {
+        if (this.gameState != GameState.PLAY_STATE) {
+            return Status.NOT_PLAY_PHASE;
+        }
+
+        boolean isOwner = player == unit.getOwner();
+
+        if (!isOwner) {
+            return Status.NOT_OWNER;
+        }
+
+        if (getUnitAt(position) != null) {
+            return Status.ALREADY_OCCUPIED;
+        }
+
+
+
+
+        placeUnitOnBoard(unit, position);
+
+        return Status.OK;
+    }
+
+    private void placeUnitOnBoard(Unit unit, Position pos) {
+        board[pos.row()][pos.col()] = unit;
     }
 
     @Override
