@@ -120,12 +120,30 @@ public class StandardGame implements Game {
             return Status.ALREADY_OCCUPIED;
         }
 
-
-
-
         placeUnitOnBoard(unit, position);
 
         return Status.OK;
+    }
+
+    @Override
+    public Status moveUnit(Player who, Position oldPosition, Position newPosition) {
+
+        if (this.playerStateMap.get(who) != PlayerState.PLAY) {
+            return Status.PLAYER_NOT_IN_PLAY_STATE;
+        }
+        Unit unit = getUnitAt(oldPosition);
+        if (unit == null) {
+            return Status.NO_UNIT_AT_POSITION;
+        }
+
+        removeUnitFrom(oldPosition);
+        placeUnitOnBoard(unit, newPosition);
+
+        return Status.OK;
+    }
+
+    private void removeUnitFrom(Position pos) {
+        this.board[pos.row()][pos.col()] = null;
     }
 
     private void placeUnitOnBoard(Unit unit, Position pos) {
@@ -149,13 +167,8 @@ public class StandardGame implements Game {
 
     @Override
     public Status endPlayPhase(Player who) {
-
         if (getPlayerState(who) != PlayerState.PLAY) {
             return Status.PLAYER_NOT_IN_PLAY_STATE;
-        }
-
-        if (this.gameState != GameState.PLAY_STATE) {
-            return Status.NOT_PLAY_PHASE;
         }
 
         playerStateMap.put(who, PlayerState.END_PLAY);
@@ -168,7 +181,6 @@ public class StandardGame implements Game {
         if (allEndedPlayPhase) {
             this.gameState = GameState.BATTLE_PHASE;
         }
-
 
         return Status.OK;
     }

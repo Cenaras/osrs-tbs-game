@@ -13,6 +13,8 @@ import static org.hamcrest.Matchers.nullValue;
 public class TestStandardGame {
 
     private Game game;
+    private final Position zero = new Position(0, 0);
+    private final Position one = new Position(1, 1);
 
     @BeforeEach
     public void setup() {
@@ -26,6 +28,8 @@ public class TestStandardGame {
 
     @Test
     public void shouldBecomeBattleStateAfterBothPlayersEndPlayState() {
+        endShopPhase();
+
         Status saraEndStatus = game.endPlayPhase(Player.SARADOMIN);
         Status zammyEndStatus = game.endPlayPhase(Player.ZAMORAK);
 
@@ -37,13 +41,15 @@ public class TestStandardGame {
     }
 
     @Test
-    public void shouldGive_NOT_IN_PLAY_PHASE_WhenEndingTryingToEndPlayPhaseInBattlePhase() {
+    public void shouldGive_PLAYER_NOT_IN_PLAY_STATE_WhenEndingTryingToEndPlayPhaseInBattlePhase() {
+        endShopPhase();
+
         game.endPlayPhase(Player.SARADOMIN);
         game.endPlayPhase(Player.ZAMORAK);
 
         // Game is now in BATTLE PHASE, and calling endPlayPhase should give error
         Status status = game.endPlayPhase(Player.SARADOMIN);
-        assertThat(status, is(Status.NOT_PLAY_PHASE));
+        assertThat(status, is(Status.PLAYER_NOT_IN_PLAY_STATE));
     }
 
     @Test
@@ -56,6 +62,31 @@ public class TestStandardGame {
         assertThat(game.getHero(Player.ZAMORAK).getType(), is(GameConstants.GNOME_CHILD_HERO));
     }
 
+    @Test
+    public void playingGoblingAndMovingItPlacesItInNewPosition() {
+        game.endShopPhase(Player.SARADOMIN);
+
+        Unit goblin = game.getItemInInventory(Player.SARADOMIN, 0);
+        game.playUnit(Player.SARADOMIN, goblin, zero);
+        Status status = game.moveUnit(Player.SARADOMIN, zero, one);
+        assertThat(status, is(Status.OK));
+        assertThat(game.getUnitAt(one).getType(), is(GameConstants.GOBLIN_UNIT));
+    }
+
+    @Test
+    public void movingEmptyPositionGivesNoUnitAtPosError() {
+        game.endShopPhase(Player.SARADOMIN);
+        Status status = game.moveUnit(Player.SARADOMIN, zero, one);
+        assertThat(status, is(Status.NO_UNIT_AT_POSITION));
+    }
+
+    @Test
+    public void movingUnitOutsidePlayPhaseGivesError() {
+        Unit goblin = game.getItemInInventory(Player.SARADOMIN, 0);
+        game.playUnit(Player.SARADOMIN, goblin, zero);
+        Status status = game.moveUnit(Player.SARADOMIN, zero, one);
+        assertThat(status, is(Status.PLAYER_NOT_IN_PLAY_STATE));
+    }
 
     @Test
     public void playersOwnTheirHero() {
@@ -127,6 +158,9 @@ public class TestStandardGame {
 
     @Test
     public void cannotPlayUnitInBattlePhase() {
+
+        endShopPhase();
+
         game.endPlayPhase(Player.ZAMORAK);
         game.endPlayPhase(Player.SARADOMIN);
 
@@ -201,6 +235,13 @@ public class TestStandardGame {
 
         assertThat(game.getGameState(), is(GameState.BATTLE_PHASE));
     }
+
+
+    private void endShopPhase() {
+        game.endShopPhase(Player.SARADOMIN);
+        game.endShopPhase(Player.ZAMORAK);
+    }
+
 
 
 }

@@ -47,6 +47,7 @@ public interface Game {
     // TODO: Position on field?
     Status playUnit(Player player, Unit unit, Position position);
 
+    Status moveUnit(Player player, Position oldPosition, Position newPosition);
 
     /**
      * Use the hero power during the PLAY phase
