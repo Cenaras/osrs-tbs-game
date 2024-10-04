@@ -99,7 +99,6 @@ public class TestStandardGame {
 
         assertThat(game.getItemInInventory(Player.SARADOMIN, 0).getType(), is(GameConstants.GOBLIN_UNIT));
         assertThat(game.getItemInInventory(Player.ZAMORAK, 0).getType(), is(GameConstants.GOBLIN_UNIT));
-
     }
 
     @Test
@@ -111,13 +110,18 @@ public class TestStandardGame {
         assertThat(goblin.getCost(), is(1));
         assertThat(goblin.getHealth(), is(5));
         assertThat(goblin.getActionSpeed(), is(4));
-
     }
 
     @Test
     public void shouldHave3GPForEachHeroAtStart() {
         assertThat(game.getHero(Player.SARADOMIN).getGP(), is(3));
         assertThat(game.getHero(Player.ZAMORAK).getGP(), is(3));
+    }
+
+    @Test
+    public void shouldHaveInitialDeckOfSize6() {
+        assertThat(game.getDeck(Player.SARADOMIN).size(), is(6));
+        assertThat(game.getDeck(Player.ZAMORAK).size(), is(6));
     }
 
 
@@ -153,6 +157,49 @@ public class TestStandardGame {
 
         assertThat(game.getUnits(Player.SARADOMIN).size(), is(1));
         assertThat(game.getUnits(Player.ZAMORAK).size(), is(1));
+    }
+
+    @Test
+    public void shouldStartInShopPhase() {
+        assertThat(game.getPlayerState(Player.SARADOMIN), is(PlayerState.SHOP));
+        assertThat(game.getPlayerState(Player.ZAMORAK), is(PlayerState.SHOP));
+    }
+
+    @Test
+    public void endingShopPhaseTransitionsPlayerToPlayPhase() {
+        Status status = game.endShopPhase(Player.SARADOMIN);
+        assertThat(status, is(Status.OK));
+
+        assertThat(game.getPlayerState(Player.SARADOMIN), is(PlayerState.PLAY));
+        assertThat(game.getPlayerState(Player.ZAMORAK), is(PlayerState.SHOP));
+
+        game.endShopPhase(Player.ZAMORAK);
+        assertThat(game.getPlayerState(Player.ZAMORAK), is(PlayerState.PLAY));
+    }
+
+    @Test
+    public void cannotEndPlayPhaseWhileNotInPlayState() {
+        Status status = game.endPlayPhase(Player.SARADOMIN);
+        assertThat(status, is(Status.PLAYER_NOT_IN_PLAY_STATE));
+
+        game.endShopPhase(Player.SARADOMIN);
+        Status success = game.endPlayPhase(Player.SARADOMIN);
+        assertThat(success, is(Status.OK));
+    }
+
+    @Test
+    public void bothPlayersEndingShopAndPlayPhaseTurnsGameToBattlePhase() {
+        game.endShopPhase(Player.SARADOMIN);
+        game.endShopPhase(Player.ZAMORAK);
+
+        Status endSaraPlay = game.endPlayPhase(Player.SARADOMIN);
+        assertThat(endSaraPlay, is(Status.OK));
+        assertThat(game.getGameState(), is(GameState.PLAY_STATE));
+
+        Status endZammyPlay = game.endPlayPhase(Player.ZAMORAK);
+        assertThat(endZammyPlay, is(Status.OK));
+
+        assertThat(game.getGameState(), is(GameState.BATTLE_PHASE));
     }
 
 

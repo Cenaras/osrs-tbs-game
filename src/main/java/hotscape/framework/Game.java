@@ -1,5 +1,7 @@
 package hotscape.framework;
 
+import hotscape.standard.PlayerState;
+
 import java.util.List;
 
 public interface Game {
@@ -51,6 +53,8 @@ public interface Game {
      */
     Status usePower();
 
+    Status endShopPhase(Player who);
+
     /**
      * Signals that a player is ready to end their play phase.
      *
@@ -67,4 +71,7 @@ public interface Game {
     GameState getGameState();
 
 
+    List<Unit> getDeck(Player player);
+
+    PlayerState getPlayerState(Player who);
 }

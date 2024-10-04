@@ -8,14 +8,20 @@ import java.util.List;
 import java.util.Map;
 
 //  TODO: Make a "Simple Initial Hand" to make production easier, worry about balance later on...
+// Things in inventory are already bought, and should therefore not cost GP
+// otherwise the "deck/shop" allows us to purchase from and into inventory
 
 public class StandardGame implements Game {
 
     private final Map<Player, StandardHero> heroMap;
-    private final Map<Player, Boolean> endPlayPhaseMap;
+    private final Map<Player, PlayerState> playerStateMap;
     private final Map<Player, List<Unit>> inventoryMap;
 
+    private final Map<Player, List<Unit>> deckMap;
+
     private final Unit[][] board = new Unit[GameConstants.MAX_ROW][GameConstants.MAX_COL];
+
+
 
     private GameState gameState;
 
@@ -26,14 +32,31 @@ public class StandardGame implements Game {
                 Player.ZAMORAK, new StandardHero(Player.ZAMORAK, GameConstants.GNOME_CHILD_HERO)
         ));
 
-        this.endPlayPhaseMap = new HashMap<>(Map.of(
-                Player.SARADOMIN, false,
-                Player.ZAMORAK, false
+        this.playerStateMap = new HashMap<>(Map.of(
+                Player.SARADOMIN, PlayerState.SHOP,
+                Player.ZAMORAK, PlayerState.SHOP
         ));
 
         this.inventoryMap = new HashMap<>(Map.of(
                 Player.SARADOMIN, List.of(new StandardUnit(Player.SARADOMIN, new UnitSpec(GameConstants.GOBLIN_UNIT, 1, 5, 4))),
                 Player.ZAMORAK, List.of(new StandardUnit(Player.ZAMORAK, new UnitSpec(GameConstants.GOBLIN_UNIT, 1, 5, 4)))
+        ));
+
+        this.deckMap = new HashMap<>(Map.of(
+                Player.SARADOMIN, List.of(
+                        new StandardUnit(Player.SARADOMIN, new UnitSpec(GameConstants.GOBLIN_UNIT, 1, 5, 4)),
+                        new StandardUnit(Player.SARADOMIN, new UnitSpec(GameConstants.GOBLIN_UNIT, 1, 5, 4)),
+                        new StandardUnit(Player.SARADOMIN, new UnitSpec(GameConstants.RAT_UNIT, 1, 3, 4)),
+                        new StandardUnit(Player.SARADOMIN, new UnitSpec(GameConstants.RAT_UNIT, 1, 3, 4)),
+                        new StandardUnit(Player.SARADOMIN, new UnitSpec(GameConstants.MAN_UNIT, 2, 7, 4)),
+                        new StandardUnit(Player.SARADOMIN, new UnitSpec(GameConstants.MAN_UNIT, 2, 7, 4))),
+                Player.ZAMORAK, List.of(
+                        new StandardUnit(Player.SARADOMIN, new UnitSpec(GameConstants.GOBLIN_UNIT, 1, 5, 4)),
+                        new StandardUnit(Player.SARADOMIN, new UnitSpec(GameConstants.GOBLIN_UNIT, 1, 5, 4)),
+                        new StandardUnit(Player.SARADOMIN, new UnitSpec(GameConstants.RAT_UNIT, 1, 3, 4)),
+                        new StandardUnit(Player.SARADOMIN, new UnitSpec(GameConstants.RAT_UNIT, 1, 3, 4)),
+                        new StandardUnit(Player.SARADOMIN, new UnitSpec(GameConstants.MAN_UNIT, 2, 7, 4)),
+                        new StandardUnit(Player.SARADOMIN, new UnitSpec(GameConstants.MAN_UNIT, 2, 7, 4)))
         ));
 
         gameState = GameState.PLAY_STATE;
@@ -115,16 +138,31 @@ public class StandardGame implements Game {
     }
 
     @Override
+    public Status endShopPhase(Player who) {
+        if (playerStateMap.get(who) != PlayerState.SHOP) {
+            return Status.PLAYER_NOT_IN_SHOP_STATE;
+        }
+
+        playerStateMap.put(who, PlayerState.PLAY);
+        return Status.OK;
+    }
+
+    @Override
     public Status endPlayPhase(Player who) {
+
+        if (getPlayerState(who) != PlayerState.PLAY) {
+            return Status.PLAYER_NOT_IN_PLAY_STATE;
+        }
+
         if (this.gameState != GameState.PLAY_STATE) {
             return Status.NOT_PLAY_PHASE;
         }
 
-        endPlayPhaseMap.put(who, true);
+        playerStateMap.put(who, PlayerState.END_PLAY);
         boolean allEndedPlayPhase = true;
 
-        for (Boolean end : endPlayPhaseMap.values()) {
-            allEndedPlayPhase &= end;
+        for (PlayerState state : playerStateMap.values()) {
+            allEndedPlayPhase &= state.equals(PlayerState.END_PLAY);
         }
 
         if (allEndedPlayPhase) {
@@ -138,5 +176,15 @@ public class StandardGame implements Game {
     @Override
     public GameState getGameState() {
         return this.gameState;
+    }
+
+    @Override
+    public List<Unit> getDeck(Player player) {
+        return this.deckMap.get(player);
+    }
+
+    @Override
+    public PlayerState getPlayerState(Player who) {
+        return this.playerStateMap.get(who);
     }
 }

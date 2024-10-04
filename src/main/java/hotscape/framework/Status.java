@@ -24,5 +24,5 @@ public enum Status {
     /**
      * Everything OK.
      */
-    OK, NOT_OWNER,
+    OK, NOT_OWNER, PLAYER_NOT_IN_SHOP_STATE, PLAYER_NOT_IN_PLAY_STATE,
 }
