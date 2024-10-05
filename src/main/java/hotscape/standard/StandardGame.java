@@ -110,6 +110,11 @@ public class StandardGame implements Game {
             return Status.NOT_PLAY_PHASE;
         }
 
+        boolean isPlayerInPlayPhase = this.playerStateMap.get(player) == PlayerState.PLAY;
+        if (!isPlayerInPlayPhase) {
+            return Status.PLAYER_NOT_IN_PLAY_STATE;
+        }
+
         boolean isOwner = player == unit.getOwner();
 
         if (!isOwner) {
@@ -127,6 +132,10 @@ public class StandardGame implements Game {
 
     @Override
     public Status moveUnit(Player who, Position oldPosition, Position newPosition) {
+
+        if (getGameState() != GameState.PLAY_STATE) {
+            return Status.NOT_PLAY_PHASE;
+        }
 
         if (this.playerStateMap.get(who) != PlayerState.PLAY) {
             return Status.PLAYER_NOT_IN_PLAY_STATE;
@@ -183,6 +192,43 @@ public class StandardGame implements Game {
         }
 
         return Status.OK;
+    }
+
+    @Override
+    public Status performBattlePhase() {
+        if (! isBattlePhase()) {
+            return Status.NOT_BATTLE_PHASE;
+        }
+
+
+        return Status.OK;
+    }
+
+    private boolean isShopPhase() {
+        for (PlayerState state : playerStateMap.values()) {
+            if (state != PlayerState.SHOP) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isPlayPhase() {
+        for (PlayerState state : playerStateMap.values()) {
+            if (state != PlayerState.PLAY) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isBattlePhase() {
+        for (PlayerState state : playerStateMap.values()) {
+            if (state != PlayerState.END_PLAY) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override

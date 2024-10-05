@@ -63,6 +63,7 @@ public interface Game {
      */
     Status endPlayPhase(Player who);
 
+    Status performBattlePhase();
 
     /**
      * Returns the current state of the game.

@@ -63,7 +63,7 @@ public class TestStandardGame {
     }
 
     @Test
-    public void playingGoblingAndMovingItPlacesItInNewPosition() {
+    public void playingGoblinAndMovingItPlacesItInNewPosition() {
         game.endShopPhase(Player.SARADOMIN);
 
         Unit goblin = game.getItemInInventory(Player.SARADOMIN, 0);
@@ -175,9 +175,12 @@ public class TestStandardGame {
 
     @Test
     public void shouldHaveGoblinOn1x1WhenPlaying() {
+        endShopPhase();
+
         Unit goblin = game.getItemInInventory(Player.SARADOMIN, 0);
         Position pos = new Position(1, 1);
-        game.playUnit(Player.SARADOMIN, goblin, pos);
+        Status status = game.playUnit(Player.SARADOMIN, goblin, pos);
+        assertThat(status, is(Status.OK));
 
         assertThat(game.getUnitAt(pos).getType(), is(GameConstants.GOBLIN_UNIT));
         assertThat(game.getUnitAt(pos).getOwner(), is(Player.SARADOMIN));
@@ -186,6 +189,8 @@ public class TestStandardGame {
 
     @Test
     public void shouldBothHaveAGoblinWhenPlaying() {
+        endShopPhase();
+
         game.playUnit(Player.SARADOMIN, game.getItemInInventory(Player.SARADOMIN, 0), new Position(1, 1));
         game.playUnit(Player.ZAMORAK, game.getItemInInventory(Player.ZAMORAK, 0), new Position(7, 7));
 
@@ -236,10 +241,49 @@ public class TestStandardGame {
         assertThat(game.getGameState(), is(GameState.BATTLE_PHASE));
     }
 
+    @Test
+    public void cannotPerformBattlePhaseIfNotInBattlePhase() {
+        assertThat(game.performBattlePhase(), is(Status.NOT_BATTLE_PHASE));
+    }
+
+    @Test
+    public void performBattleAfterBothEndShopAndPlayOK() {
+        endShopPhase();
+        endPlayPhase();
+
+        Status status = game.performBattlePhase();
+        assertThat(status, is(Status.OK));
+    }
+
+    @Test
+    public void cannotMoveUnitInBattlePhase() {
+        endShopPhase();
+        endPlayPhase();
+
+        Status status = game.moveUnit(Player.SARADOMIN, one, one);
+        assertThat(status, is(Status.NOT_PLAY_PHASE));
+
+    }
+
+    @Test
+    public void shouldHaveShopPhaseAfterBattlePhase() {
+        endShopPhase();
+        endPlayPhase();
+
+        game.performBattlePhase();
+        //assertThat(game.getGameState());
+
+
+    }
 
     private void endShopPhase() {
         game.endShopPhase(Player.SARADOMIN);
         game.endShopPhase(Player.ZAMORAK);
+    }
+
+    private void endPlayPhase() {
+        game.endPlayPhase(Player.SARADOMIN);
+        game.endPlayPhase(Player.ZAMORAK);
     }
 
 
